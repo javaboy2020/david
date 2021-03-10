@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+    <!--组件扫描-->
+    <context:component-scan base-package="cn.smbms.controller"/>
+    <bean id="myConversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">
+       <property name="converters">
+           <list>
+               <bean class="cn.smbms.tools.StringToDateConverter">
+                   <constructor-arg name="pattern" value="yyyy-MM-dd"/>
+               </bean>
+           </list>
+       </property>
+    </bean>
+    <!--开启注解支持-->
+    <mvc:annotation-driven>
+        <!--可以解决json异步传输时,中文字符串乱码的问题:全局解决-->
+        <mvc:message-converters>
+            <!-- 处理responseBody 里面日期类型 -->
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <property name="defaultCharset" value="UTF-8"></property>
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>application/json;charset=UTF-8</value>
+                    </list>
+                </property>
+                <property name="writeAcceptCharset" value="true"/>
+            </bean>
+            <bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+                <!--<property name="defaultCharset" value="UTF-8"/>-->
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>text/html;charset=UTF-8</value>
+                        <value>application/json</value>
+                    </list>
+                </property>
+                <property name="features">
+                   <list>
+                       <value>WriteDateUseDateFormat</value>
+                   </list>
+                </property>
+                <property name="defaultCharset" value="UTF-8"/>
+            </bean>
+            <!--<bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <property name="objectMapper">
+                    <bean class="com.fasterxml.jackson.databind.ObjectMapper">
+                        <property name="dateFormat">
+                            <bean class="java.text.SimpleDateFormat">
+                                <constructor-arg type="java.lang.String" value="yyyy-MM-dd HH:mm:ss" />
+                            </bean>
+                        </property>
+                    </bean>
+                </property>
+            </bean>-->
+
+
+
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <!--所有静态资源请求,包括js,css,images等默认均会被SpringMVC的DispatcherServlet拦截,需要放行-->
+    <mvc:resources mapping="/css/**" location="/css/"/>
+    <mvc:resources mapping="/js/**" location="/js/"/>
+    <mvc:resources mapping="/images/**" location="/images/"/>
+    <mvc:resources mapping="/calendar/**" location="/calendar/"/>
+    <mvc:resources mapping="/uploads/**" location="/uploads/"/>
+
+    <!--jsp视图解析器-->
+  <!--  <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/jsp/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>-->
+
+  <!--  <bean id="contentNegotiationManager" class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+        <property name="mediaTypes">
+            <value>
+                json=application/json
+                xml=application/xml
+            </value>
+        </property>
+    </bean>-->
+    <!--多视图解析器-->
+    <bean id="contentNegotiatingViewResolver" class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+        <property name="viewResolvers">
+            <list>
+                <bean id="internalResourceViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+                    <property name="prefix" value="/WEB-INF/jsp/"/>
+                    <property name="suffix" value=".jsp"/>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+        <property name="cache" value="true"/>
+        <property name="prefix" value=""/>
+        <property name="suffix" value=".ftl"/>
+    </bean>
+
+    <!--全局异常处理:对所有的Controller运行时异常生效-->
+    <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+        <property name="exceptionMappings">
+            <props>
+                <prop key="java.lang.ArithmeticException">forward:/error.jsp</prop>
+                <prop key="java.lang.NullPointerException">forward:/error2.jsp</prop>
+               <!-- <prop key="java.lang.Exception">forward:/error3.jsp</prop>-->
+            </props>
+        </property>
+    </bean>
+
+
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="UTF-8"/>
+        <!--所有文件字节总大小 50M 1024*1024*5*10-->
+        <property name="maxUploadSize" value="52428800"/>
+        <!--单个文件字节总大小 5M 1024*1024*5-->
+        <property name="maxUploadSizePerFile" value="5242880"/>
+
+    </bean>
+</beans>
